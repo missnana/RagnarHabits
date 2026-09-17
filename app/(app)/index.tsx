@@ -4,8 +4,9 @@ import {
   ExpoSpeechRecognitionModule,
   useSpeechRecognitionEvent,
 } from 'expo-speech-recognition';
-import { Card, CategoryPill, FadeIn, FormInput, PrimaryButton, Screen, ScreenTitle } from '../../components/ui';
+import { Card, CategoryPill, Content, FadeIn, FormInput, PrimaryButton, Screen, ScreenTitle } from '../../components/ui';
 import { AnimatedPressable } from '../../components/AnimatedPressable';
+import { DogRunner } from '../../components/DogRunner';
 import { useTheme } from '../../lib/hooks/useColorScheme';
 import { useAuth } from '../../lib/hooks/useAuth';
 import { useHousehold } from '../../lib/hooks/useHousehold';
@@ -106,82 +107,85 @@ export default function LogScreen() {
   return (
     <Screen edges={['bottom']} background={false}>
       <ScrollView contentContainerStyle={{ paddingBottom: spacing.xl, flexGrow: 1 }}>
-        <ScreenTitle>Eintragen</ScreenTitle>
+        <ScreenTitle center>Verhalten festhalten</ScreenTitle>
 
         {phase !== 'review' ? (
-          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'flex-end', paddingBottom: spacing.xxl + spacing.lg }}>
-            <View style={{ width: 180, height: 180, alignItems: 'center', justifyContent: 'center' }}>
-              {phase === 'listening' && (
-                <Animated.View
-                  style={{
-                    position: 'absolute',
-                    width: 180,
-                    height: 180,
-                    borderRadius: 90,
-                    backgroundColor: theme.danger,
-                    opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.35, 0] }),
-                    transform: [{ scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.35] }) }],
-                  }}
-                />
-              )}
-              <AnimatedPressable onPress={phase === 'listening' ? stopListening : startListening}>
-                <View
-                  style={{
-                    width: 180,
-                    height: 180,
-                    borderRadius: 90,
-                    backgroundColor: phase === 'listening' ? theme.danger : theme.accent,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Text style={{ fontSize: 64 }}>{phase === 'listening' ? '⏹️' : '🎙️'}</Text>
-                </View>
-              </AnimatedPressable>
+          <View style={{ flex: 1, justifyContent: 'flex-end', paddingBottom: spacing.xxl + spacing.lg }}>
+            <DogRunner breed={activeDog?.breed} running={phase === 'idle'} />
+            <View style={{ alignItems: 'center' }}>
+              <View style={{ width: 180, height: 180, alignItems: 'center', justifyContent: 'center' }}>
+                {phase === 'listening' && (
+                  <Animated.View
+                    style={{
+                      position: 'absolute',
+                      width: 180,
+                      height: 180,
+                      borderRadius: 90,
+                      backgroundColor: theme.danger,
+                      opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.35, 0] }),
+                      transform: [{ scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.35] }) }],
+                    }}
+                  />
+                )}
+                <AnimatedPressable onPress={phase === 'listening' ? stopListening : startListening}>
+                  <View
+                    style={{
+                      width: 180,
+                      height: 180,
+                      borderRadius: 90,
+                      backgroundColor: phase === 'listening' ? theme.danger : theme.accent,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Text style={{ fontSize: 64 }}>{phase === 'listening' ? '⏹️' : '🎙️'}</Text>
+                  </View>
+                </AnimatedPressable>
+              </View>
+              <Text style={[typography.subtitle, { color: theme.text, marginTop: spacing.lg, textAlign: 'center' }]}>
+                {phase === 'listening' ? 'Ich höre zu...' : 'Zum Starten tippen'}
+              </Text>
+              <Text style={{ color: theme.textMuted, textAlign: 'center', marginTop: spacing.sm, paddingHorizontal: spacing.lg }}>
+                {phase === 'listening'
+                  ? transcript || 'Sag z. B. "Ragnar hat gerade gebellt, als der Postbote kam"'
+                  : 'Erzähl kurz, was gerade passiert ist — der Rest läuft automatisch.'}
+              </Text>
             </View>
-            <Text style={[typography.subtitle, { color: theme.text, marginTop: spacing.lg, textAlign: 'center' }]}>
-              {phase === 'listening' ? 'Ich höre zu...' : 'Zum Starten tippen'}
-            </Text>
-            <Text style={{ color: theme.textMuted, textAlign: 'center', marginTop: spacing.sm, paddingHorizontal: spacing.lg }}>
-              {phase === 'listening'
-                ? transcript || 'Sag z. B. "Ragnar hat gerade gebellt, als der Postbote kam"'
-                : 'Erzähl kurz, was gerade passiert ist — der Rest läuft automatisch.'}
-            </Text>
           </View>
         ) : (
           <FadeIn>
-          <View style={{ paddingHorizontal: spacing.md }}>
-            <Card style={{ gap: spacing.sm }}>
-              <Text style={[typography.caption, { color: theme.textMuted }]}>Erkannt</Text>
-              <FormInput value={transcript} onChangeText={setTranscript} multiline numberOfLines={2} />
-            </Card>
+            <Content>
+              <Card style={{ gap: spacing.sm }}>
+                <Text style={[typography.caption, { color: theme.textMuted }]}>Erkannt</Text>
+                <FormInput value={transcript} onChangeText={setTranscript} multiline numberOfLines={2} />
+              </Card>
 
-            <Text style={[typography.subtitle, { color: theme.text, marginTop: spacing.lg, marginBottom: spacing.sm }]}>
-              Kategorie
-            </Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-              {behaviorCategories.map((c) => (
-                <CategoryPill
-                  key={c.key}
-                  label={c.label}
-                  icon={c.icon}
-                  color={c.color}
-                  selected={category === c.key}
-                  onPress={() => setCategory(c.key)}
-                />
-              ))}
-            </View>
+              <View style={{ gap: spacing.sm }}>
+                <Text style={[typography.subtitle, { color: theme.text }]}>Kategorie</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                  {behaviorCategories.map((c) => (
+                    <CategoryPill
+                      key={c.key}
+                      label={c.label}
+                      icon={c.icon}
+                      color={c.color}
+                      selected={category === c.key}
+                      onPress={() => setCategory(c.key)}
+                    />
+                  ))}
+                </View>
+              </View>
 
-            <Text style={[typography.subtitle, { color: theme.text, marginTop: spacing.md, marginBottom: spacing.sm }]}>
-              Ergänzen (optional)
-            </Text>
-            <FormInput value={note} onChangeText={setNote} placeholder="Details hinzufügen..." multiline numberOfLines={3} />
+              <View style={{ gap: spacing.sm }}>
+                <Text style={[typography.subtitle, { color: theme.text }]}>Ergänzen (optional)</Text>
+                <FormInput value={note} onChangeText={setNote} placeholder="Details hinzufügen..." multiline numberOfLines={3} />
+              </View>
 
-            <View style={{ marginTop: spacing.lg, gap: spacing.sm }}>
-              <PrimaryButton label="Bestätigen & speichern" onPress={confirmAndSave} loading={saving} />
-              <PrimaryButton label="Neue Aufnahme" onPress={discardAndRestart} variant="secondary" />
-            </View>
-          </View>
+              <View style={{ gap: spacing.sm }}>
+                <PrimaryButton label="Bestätigen & speichern" onPress={confirmAndSave} loading={saving} />
+                <PrimaryButton label="Neue Aufnahme" onPress={discardAndRestart} variant="secondary" />
+              </View>
+            </Content>
           </FadeIn>
         )}
       </ScrollView>

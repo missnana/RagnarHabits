@@ -57,9 +57,27 @@ export function FadeIn({ children, delay = 0 }: { children: ReactNode; delay?: n
   return <Animated.View style={{ opacity, transform: [{ translateY }] }}>{children}</Animated.View>;
 }
 
-export function ScreenTitle({ children }: { children: ReactNode }) {
+export function ScreenTitle({ children, center }: { children: ReactNode; center?: boolean }) {
   const theme = useTheme();
-  return <Text style={[typography.display, { color: theme.text, margin: spacing.md }]}>{children}</Text>;
+  return (
+    <Text
+      style={[
+        typography.display,
+        { color: theme.text, margin: spacing.md, textAlign: center ? 'center' : 'left' },
+      ]}
+    >
+      {children}
+    </Text>
+  );
+}
+
+/**
+ * Einheitliches Spacing-Pattern für Screen-Inhalte: horizontaler Rand +
+ * konsistenter Abstand zwischen den Abschnitten, statt an jeder Stelle
+ * einzeln marginHorizontal/marginTop zu setzen.
+ */
+export function Content({ children, style }: { children: ReactNode; style?: object }) {
+  return <View style={[{ paddingHorizontal: spacing.md, gap: spacing.lg }, style]}>{children}</View>;
 }
 
 export function Card({ children, style }: { children: ReactNode; style?: object }) {

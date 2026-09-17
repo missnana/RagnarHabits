@@ -2,6 +2,7 @@ import { useRouter, usePathname, type Href } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Modal, Pressable, Text, View } from 'react-native';
 import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../lib/hooks/useColorScheme';
 import { radius, spacing } from '../lib/theme';
@@ -38,14 +39,14 @@ export function AppHeader() {
           justifyContent: 'flex-end',
           alignItems: 'center',
           paddingHorizontal: spacing.md,
-          borderBottomWidth: 1,
-          borderBottomColor: theme.surfaceBorder,
         }}
       >
         <Pressable onPress={() => setOpen(true)} hitSlop={8}>
           <Text style={{ fontSize: 22, color: theme.text }}>☰</Text>
         </Pressable>
       </BlurView>
+      {/* Weicher Übergang statt harter Kante */}
+      <LinearGradient colors={[theme.surfaceBorder, `${theme.background}00`]} style={{ height: 18 }} pointerEvents="none" />
 
       <Modal transparent visible={open} animationType="fade" onRequestClose={() => setOpen(false)}>
         <Pressable style={{ flex: 1 }} onPress={() => setOpen(false)}>
