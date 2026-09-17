@@ -20,11 +20,11 @@ export default function TabsLayout() {
     >
       <Tabs.Screen
         name="index"
-        options={{ title: 'Dashboard', tabBarIcon: () => <TabIcon symbol="🏠" /> }}
+        options={{ title: 'Eintragen', tabBarIcon: () => <TabIcon symbol="🎙️" /> }}
       />
       <Tabs.Screen
-        name="log"
-        options={{ title: 'Eintragen', tabBarIcon: () => <TabIcon symbol="🎙️" /> }}
+        name="dashboard"
+        options={{ title: 'Dashboard', tabBarIcon: () => <TabIcon symbol="🏠" /> }}
       />
       <Tabs.Screen
         name="dog"

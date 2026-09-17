@@ -1,87 +1,156 @@
-import { useMemo } from 'react';
-import { FlatList, RefreshControl, Text, View } from 'react-native';
-import { Card, Screen, ScreenTitle, StatTile } from '../../components/ui';
-import { useHousehold } from '../../lib/hooks/useHousehold';
-import { useEvents } from '../../lib/hooks/useEvents';
+import { useState } from 'react';
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import {
+  ExpoSpeechRecognitionModule,
+  useSpeechRecognitionEvent,
+} from 'expo-speech-recognition';
+import { Card, CategoryPill, FormInput, PrimaryButton, Screen, ScreenTitle } from '../../components/ui';
 import { useTheme } from '../../lib/hooks/useColorScheme';
+import { useAuth } from '../../lib/hooks/useAuth';
+import { useHousehold } from '../../lib/hooks/useHousehold';
+import { guessCategory } from '../../lib/parseTranscript';
+import { supabase } from '../../lib/supabase';
 import { behaviorCategories, spacing, typography } from '../../lib/theme';
-import type { BehaviorEventRow } from '../../lib/database.types';
+import type { BehaviorCategoryKey } from '../../lib/database.types';
 
-function categoryMeta(key: string) {
-  return behaviorCategories.find((c) => c.key === key) ?? behaviorCategories[behaviorCategories.length - 1];
-}
+type Phase = 'idle' | 'listening' | 'review';
 
-function formatTime(iso: string) {
-  const date = new Date(iso);
-  return date.toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-}
-
-export default function DashboardScreen() {
+export default function LogScreen() {
   const theme = useTheme();
+  const { session } = useAuth();
   const { household, dogs } = useHousehold();
-  const { events, loading, reload } = useEvents(household?.id);
+  const activeDog = dogs[0];
 
-  const stats = useMemo(() => {
-    const last24h = events.filter((e) => Date.now() - new Date(e.occurred_at).getTime() < 24 * 60 * 60 * 1000);
-    const byCategory = new Map<string, number>();
-    for (const e of last24h) byCategory.set(e.category, (byCategory.get(e.category) ?? 0) + 1);
-    const topEntry = [...byCategory.entries()].sort((a, b) => b[1] - a[1])[0];
-    return {
-      totalToday: last24h.length,
-      total: events.length,
-      topCategory: topEntry ? categoryMeta(topEntry[0]) : null,
-      topCount: topEntry?.[1] ?? 0,
-    };
-  }, [events]);
+  const [phase, setPhase] = useState<Phase>('idle');
+  const [transcript, setTranscript] = useState('');
+  const [category, setCategory] = useState<BehaviorCategoryKey>('other');
+  const [note, setNote] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  const renderItem = ({ item }: { item: BehaviorEventRow }) => {
-    const meta = categoryMeta(item.category);
-    return (
-      <Card style={{ flexDirection: 'row', alignItems: 'center', marginHorizontal: spacing.md, marginBottom: spacing.sm }}>
-        <Text style={{ fontSize: 22, marginRight: spacing.md }}>{meta.icon}</Text>
-        <View style={{ flex: 1 }}>
-          <Text style={[typography.subtitle, { color: theme.text }]}>{meta.label}</Text>
-          {item.note ? <Text style={{ color: theme.textMuted, marginTop: 2 }}>{item.note}</Text> : null}
-        </View>
-        <Text style={{ color: theme.textMuted, fontSize: 12 }}>{formatTime(item.occurred_at)}</Text>
-      </Card>
-    );
+  useSpeechRecognitionEvent('result', (event) => {
+    const text = event.results[0]?.transcript ?? '';
+    setTranscript(text);
+    setCategory(guessCategory(text));
+  });
+
+  useSpeechRecognitionEvent('end', () => {
+    setPhase((current) => (current === 'listening' ? 'review' : current));
+  });
+
+  useSpeechRecognitionEvent('error', (event) => {
+    setPhase('idle');
+    Alert.alert('Spracherkennung', event.message ?? 'Unbekannter Fehler');
+  });
+
+  const startListening = async () => {
+    const permission = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Berechtigung fehlt', 'Bitte Mikrofon-/Spracherkennungszugriff erlauben.');
+      return;
+    }
+    setTranscript('');
+    setNote('');
+    setCategory('other');
+    setPhase('listening');
+    ExpoSpeechRecognitionModule.start({ lang: 'de-DE', interimResults: true, continuous: false });
+  };
+
+  const stopListening = () => ExpoSpeechRecognitionModule.stop();
+
+  const discardAndRestart = () => {
+    setTranscript('');
+    setNote('');
+    setCategory('other');
+    setPhase('idle');
+  };
+
+  const confirmAndSave = async () => {
+    if (!household || !activeDog || !session?.user) {
+      Alert.alert('Noch kein Hund angelegt', 'Leg zuerst unter "Hund" ein Profil an.');
+      return;
+    }
+    setSaving(true);
+    const { error } = await supabase.from('behavior_events').insert({
+      household_id: household.id,
+      dog_id: activeDog.id,
+      category,
+      note: note || null,
+      raw_transcript: transcript || null,
+      occurred_at: new Date().toISOString(),
+      created_by: session.user.id,
+    });
+    setSaving(false);
+    if (error) {
+      Alert.alert('Fehler beim Speichern', error.message);
+      return;
+    }
+    discardAndRestart();
   };
 
   return (
     <Screen>
-      <FlatList
-        data={events}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        refreshControl={<RefreshControl refreshing={loading} onRefresh={reload} tintColor={theme.primary} />}
-        ListHeaderComponent={
-          <View>
-            <ScreenTitle>
-              {dogs[0]?.name ? `${dogs[0].name}s Tag` : 'Dashboard'}
-            </ScreenTitle>
-            <View style={{ flexDirection: 'row', gap: spacing.sm, marginHorizontal: spacing.md, marginBottom: spacing.md }}>
-              <StatTile label="Einträge (24h)" value={String(stats.totalToday)} />
-              <StatTile
-                label={stats.topCategory ? `Häufigst: ${stats.topCategory.label}` : 'Noch keine Daten'}
-                value={stats.topCategory ? String(stats.topCount) : '–'}
-                color={stats.topCategory?.color}
-              />
-            </View>
-            <Text style={[typography.subtitle, { color: theme.text, marginHorizontal: spacing.md, marginBottom: spacing.sm }]}>
-              Letzte Einträge
+      <ScrollView contentContainerStyle={{ paddingBottom: spacing.xl, flexGrow: 1 }}>
+        <ScreenTitle>Eintragen</ScreenTitle>
+
+        {phase !== 'review' ? (
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: spacing.xl }}>
+            <Pressable
+              onPress={phase === 'listening' ? stopListening : startListening}
+              style={{
+                width: 180,
+                height: 180,
+                borderRadius: 90,
+                backgroundColor: phase === 'listening' ? theme.danger : theme.primary,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Text style={{ fontSize: 64 }}>{phase === 'listening' ? '⏹️' : '🎙️'}</Text>
+            </Pressable>
+            <Text style={[typography.subtitle, { color: theme.text, marginTop: spacing.lg, textAlign: 'center' }]}>
+              {phase === 'listening' ? 'Ich höre zu...' : 'Zum Starten tippen'}
+            </Text>
+            <Text style={{ color: theme.textMuted, textAlign: 'center', marginTop: spacing.sm, paddingHorizontal: spacing.lg }}>
+              {phase === 'listening'
+                ? transcript || 'Sag z. B. "Ragnar hat gerade gebellt, als der Postbote kam"'
+                : 'Erzähl kurz, was gerade passiert ist — der Rest läuft automatisch.'}
             </Text>
           </View>
-        }
-        ListEmptyComponent={
-          !loading ? (
-            <Text style={{ color: theme.textMuted, textAlign: 'center', marginTop: spacing.lg }}>
-              Noch keine Einträge. Leg unter "Eintragen" den ersten Eintrag an.
+        ) : (
+          <View style={{ paddingHorizontal: spacing.md }}>
+            <Card style={{ gap: spacing.sm }}>
+              <Text style={[typography.caption, { color: theme.textMuted }]}>Erkannt</Text>
+              <FormInput value={transcript} onChangeText={setTranscript} multiline numberOfLines={2} />
+            </Card>
+
+            <Text style={[typography.subtitle, { color: theme.text, marginTop: spacing.lg, marginBottom: spacing.sm }]}>
+              Kategorie
             </Text>
-          ) : null
-        }
-        contentContainerStyle={{ paddingBottom: spacing.xl }}
-      />
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+              {behaviorCategories.map((c) => (
+                <CategoryPill
+                  key={c.key}
+                  label={c.label}
+                  icon={c.icon}
+                  color={c.color}
+                  selected={category === c.key}
+                  onPress={() => setCategory(c.key)}
+                />
+              ))}
+            </View>
+
+            <Text style={[typography.subtitle, { color: theme.text, marginTop: spacing.md, marginBottom: spacing.sm }]}>
+              Ergänzen (optional)
+            </Text>
+            <FormInput value={note} onChangeText={setNote} placeholder="Details hinzufügen..." multiline numberOfLines={3} />
+
+            <View style={{ marginTop: spacing.lg, gap: spacing.sm }}>
+              <PrimaryButton label="Bestätigen & speichern" onPress={confirmAndSave} loading={saving} />
+              <PrimaryButton label="Neue Aufnahme" onPress={discardAndRestart} variant="secondary" />
+            </View>
+          </View>
+        )}
+      </ScrollView>
     </Screen>
   );
 }
