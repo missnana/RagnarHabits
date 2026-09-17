@@ -36,7 +36,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <Screen>
+    <Screen edges={['bottom']}>
       <ScreenTitle>Einstellungen</ScreenTitle>
 
       <Card style={{ marginHorizontal: spacing.md, marginBottom: spacing.md }}>

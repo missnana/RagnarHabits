@@ -88,12 +88,12 @@ export default function LogScreen() {
   };
 
   return (
-    <Screen>
+    <Screen edges={['bottom']}>
       <ScrollView contentContainerStyle={{ paddingBottom: spacing.xl, flexGrow: 1 }}>
         <ScreenTitle>Eintragen</ScreenTitle>
 
         {phase !== 'review' ? (
-          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: spacing.xl }}>
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'flex-end', paddingBottom: spacing.xxl + spacing.lg }}>
             <Pressable
               onPress={phase === 'listening' ? stopListening : startListening}
               style={{

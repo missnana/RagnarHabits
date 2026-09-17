@@ -8,14 +8,14 @@ import {
   TextInputProps,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Edge, SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../lib/hooks/useColorScheme';
 import { radius, spacing, typography } from '../lib/theme';
 
-export function Screen({ children }: { children: ReactNode }) {
+export function Screen({ children, edges = ['top'] }: { children: ReactNode; edges?: Edge[] }) {
   const theme = useTheme();
   return (
-    <SafeAreaView style={[styles.screen, { backgroundColor: theme.background }]} edges={['top']}>
+    <SafeAreaView style={[styles.screen, { backgroundColor: theme.background }]} edges={edges}>
       {children}
     </SafeAreaView>
   );
