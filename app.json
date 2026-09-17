@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "RagnarHabits",
+    "slug": "RagnarHabits",
+    "scheme": "ragnarhabits",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ragnarhabits.app"
+    },
+    "android": {
+      "package": "com.ragnarhabits.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "RagnarHabits braucht Zugriff auf deine Fotos, um ein Bild deines Hundes hochzuladen.",
+          "cameraPermission": "RagnarHabits braucht Zugriff auf die Kamera, um ein Foto deines Hundes aufzunehmen."
+        }
+      ],
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "RagnarHabits braucht Zugriff auf das Mikrofon, um deine Sprach-Eingaben zum Hundeverhalten aufzunehmen.",
+          "speechRecognitionPermission": "RagnarHabits braucht Zugriff auf die Spracherkennung, um deine Sprach-Eingaben in Text umzuwandeln."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
