@@ -21,13 +21,6 @@ export interface HouseholdRow {
   created_at: string;
 }
 
-export interface HouseholdMemberRow {
-  household_id: string;
-  user_id: string;
-  role: 'owner' | 'member';
-  joined_at: string;
-}
-
 export interface DogRow {
   id: string;
   household_id: string;

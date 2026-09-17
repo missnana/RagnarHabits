@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../lib/hooks/useColorScheme';
-import { radius, spacing, typography, type Theme } from '../lib/theme';
+import { radius, spacing, typography } from '../lib/theme';
 
 export function Screen({ children }: { children: ReactNode }) {
   const theme = useTheme();
@@ -134,10 +134,6 @@ export function StatTile({ label, value, color }: { label: string; value: string
       <Text style={[typography.caption, { color: theme.textMuted, marginTop: 2 }]}>{label}</Text>
     </Card>
   );
-}
-
-export function themedStyles(theme: Theme) {
-  return { theme };
 }
 
 const styles = StyleSheet.create({
