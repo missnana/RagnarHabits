@@ -2,16 +2,24 @@
 // Bei Schema-Änderungen: idealerweise mit `supabase gen types typescript` neu generieren.
 
 export type BehaviorCategoryKey =
-  | 'bark'
-  | 'walk'
+  | 'toilet'
   | 'eat'
   | 'sleep'
+  | 'rest'
   | 'play'
-  | 'toilet'
+  | 'cuddle'
+  | 'enrichment'
+  | 'reaction'
+  | 'social'
+  | 'car'
   | 'training'
+  | 'wake'
   | 'vet'
-  | 'anxiety'
+  | 'observation'
   | 'other';
+
+/** Nur für category = 'toilet' relevant. */
+export type ToiletOutcome = 'success' | 'wrong_place' | 'fail';
 
 export interface HouseholdRow {
   id: string;
@@ -37,6 +45,7 @@ export interface BehaviorEventRow {
   household_id: string;
   dog_id: string;
   category: BehaviorCategoryKey;
+  outcome: ToiletOutcome | null;
   note: string | null;
   raw_transcript: string | null;
   occurred_at: string;

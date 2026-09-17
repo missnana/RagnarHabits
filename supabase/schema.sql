@@ -58,8 +58,14 @@ create table if not exists behavior_events (
   household_id uuid not null references households (id) on delete cascade,
   dog_id uuid not null references dogs (id) on delete cascade,
   category text not null check (
-    category in ('bark', 'walk', 'eat', 'sleep', 'play', 'toilet', 'training', 'vet', 'anxiety', 'other')
+    category in (
+      'toilet', 'eat', 'sleep', 'rest', 'play', 'cuddle', 'enrichment',
+      'reaction', 'social', 'car', 'training', 'wake', 'vet', 'observation', 'other'
+    )
   ),
+  -- Nur bei category = 'toilet' relevant: war der Lösen-Versuch erfolgreich,
+  -- am falschen Ort (z.B. Crate), oder erfolglos? Kern des Haustrainings-Trackings.
+  outcome text check (outcome in ('success', 'wrong_place', 'fail')),
   note text,
   raw_transcript text, -- Originaltext der Spracheingabe, für Nachvollziehbarkeit/Re-Parsing
   occurred_at timestamptz not null default now(),

@@ -12,22 +12,36 @@ weitere Personen (z. B. deinen Partner/Freund).
   automatischer Sync zwischen Geräten/Nutzern. Kein manueller "Sync-Knopf"
   nötig, Änderungen erscheinen per Realtime bei allen Haushaltsmitgliedern.
 - **expo-speech-recognition** — native Sprache-zu-Text-Erkennung (Deutsch).
+- **expo-blur / expo-linear-gradient** — Glass/Blur-Optik, Farbverläufe.
 
 ## Projektstruktur
 
 ```
-app/                    Screens (expo-router: Ordner/Dateien = Routen)
+app/
   auth/                 Login & Registrierung
-  (tabs)/               Hauptbereich nach Login: Dashboard, Eintragen, Hund, Einstellungen
+  (app)/                Hauptbereich nach Login:
+    index.tsx             Eintragen (Startseite) — Sprachaufnahme
+    dashboard.tsx          Wochenübersicht, Vorhersage, Erfolgsquote
+    dog.tsx                Hundeprofil (Steckbrief, Foto)
+    settings.tsx            Account, Haushalt teilen/beitreten
+    _layout.tsx            Farbverlauf-Hintergrund + AppHeader
   _layout.tsx           Root-Layout, regelt Auth-Redirects
-components/ui.tsx       Gemeinsame UI-Bausteine (Button, Card, Pill, ...)
+components/
+  ui.tsx                Gemeinsame UI-Bausteine (Button, Card, Content, ...)
+  AppHeader.tsx         Menü-Icon oben rechts, Dropdown-Navigation
+  DogRunner.tsx          Animierte Hunde-Silhouette im Hintergrund
+  IridescentHalo.tsx     Schimmernder Glow hinter dem Mikro-Button
+  EntryEditModal.tsx     Eintrag bearbeiten (Bottom-Sheet)
+  WeekStrip.tsx          Wochenfokus-Kalenderleiste
 lib/
-  theme.ts              Farben, Typografie, Kategorien-Definitionen
+  theme.ts              Farben, Typografie, Kategorien-/Outcome-Definitionen
   supabase.ts           Supabase-Client
   database.types.ts     Typen passend zum SQL-Schema
-  parseTranscript.ts    Heuristik: Sprachtext → Kategorie (siehe Hinweis unten)
+  parseTranscript.ts    Heuristik: Sprachtext → Kategorie
+  predict.ts            Vorhersage-Heuristik + Trigger-Korrelationsanalyse
   hooks/                useAuth, useHousehold, useEvents
 supabase/schema.sql      Datenbank-Schema inkl. Row-Level-Security
+scripts/import-log.mjs   Einmaliger Import historischer Excel-Daten
 ```
 
 ## Datenmodell & Sharing
@@ -35,13 +49,31 @@ supabase/schema.sql      Datenbank-Schema inkl. Row-Level-Security
 - `households` — eine Gruppe, die sich Daten teilt (du + Freund).
 - `household_members` — wer gehört zu welchem Haushalt.
 - `dogs` — gehören einem Haushalt, nicht einer einzelnen Person.
-- `behavior_events` — die eigentlichen Tracking-Einträge.
+- `behavior_events` — die eigentlichen Tracking-Einträge: Kategorie, optional
+  ein `outcome` (nur bei `category = 'toilet'`: `success` / `wrong_place` /
+  `fail`, fürs Haustraining-Tracking), Notiz, erkannter Text, Zeitpunkt.
 
 Bei der Registrierung wird automatisch ein eigener Haushalt angelegt. Über
-**Einstellungen → Code teilen** gibst du deinem Freund einen Einladungscode;
-er/sie trägt ihn unter **Einstellungen → Einem Haushalt beitreten** ein und
-seht danach dieselben Hunde/Einträge — automatisch synchronisiert, ohne
-manuellen Export/Import.
+**Menü → Einstellungen → Code teilen** gibst du deinem Freund einen
+Einladungscode; er/sie trägt ihn unter **Einstellungen → Einem Haushalt
+beitreten** ein und seht danach dieselben Hunde/Einträge — automatisch
+synchronisiert, ohne manuellen Export/Import.
+
+## Automatische Auswertung
+
+- **Dashboard-Wochenleiste**: Standardansicht ist die aktuelle Woche, ein Tag
+  antippen zoomt auf diesen Tag (erneutes Antippen zoomt zurück).
+- **"Vermutlich als Nächstes"**: einfache Heuristik, die aus dem
+  durchschnittlichen Abstand zwischen bisherigen Einträgen einer Kategorie
+  den nächsten voraussichtlichen Zeitpunkt schätzt.
+- **Lösen-Erfolgsquote & Trigger-Korrelationen** ("Was hilft beim Lösen?"):
+  rechnet nach, wie oft und wie schnell nach Füttern/Aufwachen/Spielen
+  erfolgreich gelöst wurde, inkl. erfolgloser Versuche dazwischen — der
+  gleiche Gedanke wie die manuelle Analyse in der ursprünglichen
+  Excel-Tabelle, jetzt automatisch aus den echten Einträgen berechnet.
+
+Beides sind bewusst einfache, nachvollziehbare Heuristiken (kein
+ML-Modell) — ein guter erster Schritt, der mit mehr Daten zuverlässiger wird.
 
 ## Setup
 
@@ -55,12 +87,27 @@ manuellen Export/Import.
 5. Abhängigkeiten installieren: `npm install`
 6. App starten: `npm start` (dann `w` für Web, oder mit Expo Go / Dev Client
    auf dem Handy scannen).
+7. Registrieren, unter "Hund" ein Profil anlegen.
 
 **Hinweis zur Sprach-Eingabe:** `expo-speech-recognition` ist ein natives
 Modul und läuft nicht in der klassischen Expo-Go-App. Für Tests auf dem
 echten Gerät braucht es einen Expo **Dev Client** (`npx expo run:android` /
 `npx expo run:ios`) oder einen EAS-Build. Im Web-Preview funktioniert die
 restliche App (Dashboard, Hundeprofil, Sharing) unabhängig davon.
+
+## Historische Daten importieren
+
+Die ursprüngliche Excel-Tabelle (16.–17.09.) lässt sich einmalig übernehmen,
+sobald Account + Hundeprofil angelegt sind:
+
+```
+node scripts/import-log.mjs deine@email.de deinPasswort
+```
+
+Das Skript meldet sich mit deinem Account an, findet deinen Haushalt/Hund
+und importiert die 99 historischen Einträge (inkl. Erfolg/Fehlschlag beim
+Lösen) via Supabase. `scripts/import-log-data.mjs` enthält die dafür aus der
+Excel-Datei übersetzten Rohdaten.
 
 ## Auf Handys testen / für den Store vorbereiten
 
@@ -93,6 +140,12 @@ restliche App (Dashboard, Hundeprofil, Sharing) unabhängig davon.
 
 - Ein Nutzer sieht immer nur den **zuletzt beigetretenen** Haushalt aktiv
   (kein Umschalten zwischen mehreren Haushalten in der UI).
-- Sprache → Kategorie ist eine einfache Keyword-Heuristik, kein echtes LLM.
+- Sprache → Kategorie ist eine einfache Keyword-Heuristik, kein echtes LLM;
+  das Outcome (Erfolg/Fehlschlag beim Lösen) wird manuell im
+  Bestätigungs-Screen gewählt.
+- Vorhersage & Trigger-Korrelationen sind einfache statistische Heuristiken,
+  kein ML-Modell.
 - Es gibt genau ein Hundeprofil pro Haushalt (Mehrere-Hunde-Support ist im
   Datenmodell aber bereits angelegt, `dogs` ist eine Liste).
+- "Dashboard passt sich an das am häufigsten Gefragte an" ist noch nicht
+  umgesetzt — dafür fehlt aktuell eine Basis an Nutzungsdaten.

@@ -13,15 +13,20 @@ import type { BehaviorCategoryKey } from './database.types';
  * der den Key serverseitig hält.
  */
 const keywordMap: Record<BehaviorCategoryKey, string[]> = {
-  bark: ['bell', 'gebellt', 'laut', 'geknurrt'],
-  walk: ['spazier', 'gassi', 'gelaufen', 'draußen'],
-  eat: ['gefressen', 'essen', 'futter', 'gefüttert'],
-  sleep: ['geschlafen', 'schlaf', 'müde', 'geruht'],
-  play: ['gespielt', 'spielen', 'ball', 'toben'],
-  toilet: ['gepinkelt', 'geloest', 'gelöst', 'kacke', 'pipi', 'geschissen'],
+  toilet: ['gepinkelt', 'geloest', 'gelöst', 'kacke', 'pipi', 'geschissen', 'haufen', 'garten', 'crate-unfall'],
+  eat: ['gefressen', 'essen', 'futter', 'gefüttert', 'frühstück', 'mittag', 'abendessen'],
+  sleep: ['geschlafen', 'schläft', 'eingeschlafen', 'nachtschlaf'],
+  rest: ['ruhe', 'crate', 'käfig', 'körbchen', 'beruhigt'],
+  play: ['gespielt', 'spielen', 'ball', 'toben', 'zoomies', 'zerrspiel'],
+  cuddle: ['kuscheln', 'schoß', 'gekuschelt'],
+  enrichment: ['schnüffelmatte', 'kaustange', 'beschäftigung', 'kong', 'futterball', 'schnüffelrolle', 'kauen'],
+  reaction: ['bellt', 'geknurrt', 'klingel', 'erschrocken', 'unruhig', 'angst', 'ausgerastet'],
+  social: ['nachbarshund', 'anderer hund', 'sozialkontakt', 'hundekontakt'],
+  car: ['auto', 'autofahrt', 'autotraining'],
   training: ['training', 'geübt', 'kommando', 'sitz', 'platz'],
+  wake: ['aufgewacht', 'aufwachen', 'wecker', 'wach'],
   vet: ['tierarzt', 'impfung', 'untersuchung', 'medikament'],
-  anxiety: ['angst', 'unruhig', 'gezittert', 'gestresst', 'versteckt'],
+  observation: ['beobachtung', 'aufgefallen', 'bemerkt'],
   other: [],
 };
 

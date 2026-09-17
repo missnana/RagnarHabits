@@ -7,7 +7,7 @@ import { EntryEditModal } from '../../components/EntryEditModal';
 import { useHousehold } from '../../lib/hooks/useHousehold';
 import { useEvents } from '../../lib/hooks/useEvents';
 import { useTheme } from '../../lib/hooks/useColorScheme';
-import { predictNext, formatRelative } from '../../lib/predict';
+import { predictNext, formatRelative, computeTriggerCorrelations, toiletSummary } from '../../lib/predict';
 import { behaviorCategories, spacing, typography } from '../../lib/theme';
 import type { BehaviorEventRow } from '../../lib/database.types';
 
@@ -57,6 +57,8 @@ export default function DashboardScreen() {
   }, [visibleEvents]);
 
   const prediction = useMemo(() => predictNext(events), [events]);
+  const correlations = useMemo(() => computeTriggerCorrelations(events), [events]);
+  const toilet = useMemo(() => toiletSummary(events), [events]);
 
   const renderItem = ({ item }: { item: BehaviorEventRow }) => {
     const meta = categoryMeta(item.category);
@@ -108,6 +110,36 @@ export default function DashboardScreen() {
                   color={stats.topCategory?.color}
                 />
               </View>
+
+              {toilet.total > 0 && (
+                <Card style={{ gap: spacing.xs }}>
+                  <Text style={[typography.subtitle, { color: theme.text }]}>Lösen – Erfolgsquote</Text>
+                  <Text style={[typography.display, { color: theme.primary }]}>{toilet.rate}%</Text>
+                  <Text style={{ color: theme.textMuted }}>
+                    {toilet.success}× erfolgreich draußen · {toilet.wrongPlace}× falscher Ort · {toilet.fail}× erfolglos
+                  </Text>
+                </Card>
+              )}
+
+              {correlations.length > 0 && (
+                <Card style={{ gap: spacing.sm }}>
+                  <Text style={[typography.subtitle, { color: theme.text }]}>Was hilft beim Lösen?</Text>
+                  {correlations.map((c) => (
+                    <View key={c.trigger.key} style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Text style={{ fontSize: 18, marginRight: spacing.sm }}>{c.trigger.icon}</Text>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ color: theme.text, fontWeight: '600' }}>
+                          Nach {c.trigger.label}
+                          {c.avgMinutes != null ? ` · Ø ${Math.round(c.avgMinutes)} Min. bis Erfolg` : ''}
+                        </Text>
+                        <Text style={{ color: theme.textMuted, fontSize: 12 }}>
+                          {c.successCount}× erfolgreich, {c.failedAttemptsAfter}× erfolglose Versuche davor
+                        </Text>
+                      </View>
+                    </View>
+                  ))}
+                </Card>
+              )}
             </Content>
 
             <Text style={[typography.subtitle, { color: theme.text, marginHorizontal: spacing.md, marginBottom: spacing.sm }]}>

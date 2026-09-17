@@ -4,8 +4,8 @@ import { BlurView } from 'expo-blur';
 import { CategoryPill, FormInput, PrimaryButton } from './ui';
 import { useTheme } from '../lib/hooks/useColorScheme';
 import { supabase } from '../lib/supabase';
-import { behaviorCategories, radius, spacing, typography } from '../lib/theme';
-import type { BehaviorCategoryKey, BehaviorEventRow } from '../lib/database.types';
+import { behaviorCategories, radius, spacing, toiletOutcomes, typography } from '../lib/theme';
+import type { BehaviorCategoryKey, BehaviorEventRow, ToiletOutcome } from '../lib/database.types';
 
 export function EntryEditModal({
   event,
@@ -18,6 +18,7 @@ export function EntryEditModal({
 }) {
   const theme = useTheme();
   const [category, setCategory] = useState<BehaviorCategoryKey>('other');
+  const [outcome, setOutcome] = useState<ToiletOutcome | null>(null);
   const [note, setNote] = useState('');
   const [transcript, setTranscript] = useState('');
   const [saving, setSaving] = useState(false);
@@ -25,6 +26,7 @@ export function EntryEditModal({
   useEffect(() => {
     if (!event) return;
     setCategory(event.category);
+    setOutcome(event.outcome);
     setNote(event.note ?? '');
     setTranscript(event.raw_transcript ?? '');
   }, [event]);
@@ -34,7 +36,12 @@ export function EntryEditModal({
     setSaving(true);
     const { error } = await supabase
       .from('behavior_events')
-      .update({ category, note: note || null, raw_transcript: transcript || null })
+      .update({
+        category,
+        outcome: category === 'toilet' ? outcome : null,
+        note: note || null,
+        raw_transcript: transcript || null,
+      })
       .eq('id', event.id);
     setSaving(false);
     if (error) {
@@ -105,6 +112,24 @@ export function EntryEditModal({
                 ))}
               </View>
             </View>
+
+            {category === 'toilet' && (
+              <View style={{ gap: spacing.sm }}>
+                <Text style={[typography.caption, { color: theme.textMuted }]}>Erfolgreich?</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                  {toiletOutcomes.map((o) => (
+                    <CategoryPill
+                      key={o.key}
+                      label={o.label}
+                      icon={o.icon}
+                      color={o.color}
+                      selected={outcome === o.key}
+                      onPress={() => setOutcome(o.key)}
+                    />
+                  ))}
+                </View>
+              </View>
+            )}
 
             <View style={{ gap: spacing.sm }}>
               <Text style={[typography.caption, { color: theme.textMuted }]}>Notiz</Text>

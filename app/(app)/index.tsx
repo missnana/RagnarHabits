@@ -13,8 +13,8 @@ import { useAuth } from '../../lib/hooks/useAuth';
 import { useHousehold } from '../../lib/hooks/useHousehold';
 import { guessCategory } from '../../lib/parseTranscript';
 import { supabase } from '../../lib/supabase';
-import { behaviorCategories, spacing, typography } from '../../lib/theme';
-import type { BehaviorCategoryKey } from '../../lib/database.types';
+import { behaviorCategories, spacing, toiletOutcomes, typography } from '../../lib/theme';
+import type { BehaviorCategoryKey, ToiletOutcome } from '../../lib/database.types';
 
 type Phase = 'idle' | 'listening' | 'review';
 
@@ -27,6 +27,7 @@ export default function LogScreen() {
   const [phase, setPhase] = useState<Phase>('idle');
   const [transcript, setTranscript] = useState('');
   const [category, setCategory] = useState<BehaviorCategoryKey>('other');
+  const [outcome, setOutcome] = useState<ToiletOutcome | null>(null);
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
   const pulse = useRef(new Animated.Value(0)).current;
@@ -69,6 +70,7 @@ export default function LogScreen() {
     setTranscript('');
     setNote('');
     setCategory('other');
+    setOutcome(null);
     setPhase('listening');
     ExpoSpeechRecognitionModule.start({ lang: 'de-DE', interimResults: true, continuous: false });
   };
@@ -79,6 +81,7 @@ export default function LogScreen() {
     setTranscript('');
     setNote('');
     setCategory('other');
+    setOutcome(null);
     setPhase('idle');
   };
 
@@ -92,6 +95,7 @@ export default function LogScreen() {
       household_id: household.id,
       dog_id: activeDog.id,
       category,
+      outcome: category === 'toilet' ? outcome : null,
       note: note || null,
       raw_transcript: transcript || null,
       occurred_at: new Date().toISOString(),
@@ -182,6 +186,24 @@ export default function LogScreen() {
                   ))}
                 </View>
               </View>
+
+              {category === 'toilet' && (
+                <View style={{ gap: spacing.sm }}>
+                  <Text style={[typography.subtitle, { color: theme.text }]}>Erfolgreich?</Text>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                    {toiletOutcomes.map((o) => (
+                      <CategoryPill
+                        key={o.key}
+                        label={o.label}
+                        icon={o.icon}
+                        color={o.color}
+                        selected={outcome === o.key}
+                        onPress={() => setOutcome(o.key)}
+                      />
+                    ))}
+                  </View>
+                </View>
+              )}
 
               <View style={{ gap: spacing.sm }}>
                 <Text style={[typography.subtitle, { color: theme.text }]}>Ergänzen (optional)</Text>

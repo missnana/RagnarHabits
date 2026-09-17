@@ -1,6 +1,7 @@
 // Zentrales Design-System für RagnarHabits.
 // Palette von der UX-Designerin vorgegeben: dunkles Grün + Ocker dominieren,
 // Rose/Mauve, Mint und Indigo sind sparsame Akzente, Creme/Braun sind Neutrale.
+import type { BehaviorCategoryKey, ToiletOutcome } from './database.types';
 
 export const palette = {
   forestDeep: '#1E3226',
@@ -119,17 +120,33 @@ export const typography = {
   caption: { fontSize: 13, fontWeight: '500' as const },
 };
 
-export const behaviorCategories = [
-  { key: 'bark', label: 'Bellen', color: palette.rose, icon: '📢' },
-  { key: 'walk', label: 'Spaziergang', color: palette.forest, icon: '🚶' },
+interface CategoryMeta {
+  key: BehaviorCategoryKey;
+  label: string;
+  color: string;
+  icon: string;
+}
+
+export const behaviorCategories: CategoryMeta[] = [
+  { key: 'toilet', label: 'Lösen', color: palette.taupe, icon: '💩' },
   { key: 'eat', label: 'Fressen', color: palette.ochreDeep, icon: '🍖' },
   { key: 'sleep', label: 'Schlafen', color: palette.indigo, icon: '💤' },
+  { key: 'rest', label: 'Ruhe/Crate', color: palette.forestLight, icon: '🛌' },
   { key: 'play', label: 'Spielen', color: palette.rose, icon: '🎾' },
-  { key: 'toilet', label: 'Lösen', color: palette.taupe, icon: '💩' },
-  { key: 'training', label: 'Training', color: palette.forestLight, icon: '🎯' },
+  { key: 'cuddle', label: 'Kuscheln', color: palette.roseDeep, icon: '🥰' },
+  { key: 'enrichment', label: 'Beschäftigung', color: palette.mint, icon: '🧠' },
+  { key: 'reaction', label: 'Reaktion/Geräusch', color: palette.indigo, icon: '😟' },
+  { key: 'social', label: 'Sozialkontakt', color: palette.forest, icon: '🐕' },
+  { key: 'car', label: 'Auto', color: palette.taupe, icon: '🚗' },
+  { key: 'training', label: 'Training', color: palette.forest, icon: '🎯' },
+  { key: 'wake', label: 'Aufwachen', color: palette.ochre, icon: '🌅' },
   { key: 'vet', label: 'Tierarzt', color: palette.danger, icon: '🏥' },
-  { key: 'anxiety', label: 'Unruhe/Angst', color: palette.indigo, icon: '😟' },
-  { key: 'other', label: 'Sonstiges', color: palette.mint, icon: '📝' },
-] as const;
+  { key: 'observation', label: 'Beobachtung', color: palette.mint, icon: '📝' },
+  { key: 'other', label: 'Sonstiges', color: palette.mint, icon: '❓' },
+];
 
-export type BehaviorCategoryKey = (typeof behaviorCategories)[number]['key'];
+export const toiletOutcomes: { key: ToiletOutcome; label: string; color: string; icon: string }[] = [
+  { key: 'success', label: 'Erfolgreich draußen', color: palette.forest, icon: '✅' },
+  { key: 'wrong_place', label: 'Falscher Ort', color: palette.ochreDeep, icon: '⚠️' },
+  { key: 'fail', label: 'Erfolglos', color: palette.danger, icon: '❌' },
+];
