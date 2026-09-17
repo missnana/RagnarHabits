@@ -7,6 +7,7 @@ import {
 import { Card, CategoryPill, Content, FadeIn, FormInput, PrimaryButton, Screen, ScreenTitle } from '../../components/ui';
 import { AnimatedPressable } from '../../components/AnimatedPressable';
 import { DogRunner } from '../../components/DogRunner';
+import { IridescentHalo } from '../../components/IridescentHalo';
 import { useTheme } from '../../lib/hooks/useColorScheme';
 import { useAuth } from '../../lib/hooks/useAuth';
 import { useHousehold } from '../../lib/hooks/useHousehold';
@@ -113,7 +114,8 @@ export default function LogScreen() {
           <View style={{ flex: 1, justifyContent: 'flex-end', paddingBottom: spacing.xxl + spacing.lg }}>
             <DogRunner breed={activeDog?.breed} running={phase === 'idle'} />
             <View style={{ alignItems: 'center' }}>
-              <View style={{ width: 180, height: 180, alignItems: 'center', justifyContent: 'center' }}>
+              <View style={{ width: 220, height: 220, alignItems: 'center', justifyContent: 'center' }}>
+                {phase !== 'listening' && <IridescentHalo size={200} />}
                 {phase === 'listening' && (
                   <Animated.View
                     style={{
@@ -136,6 +138,11 @@ export default function LogScreen() {
                       backgroundColor: phase === 'listening' ? theme.danger : theme.accent,
                       alignItems: 'center',
                       justifyContent: 'center',
+                      shadowColor: theme.accent,
+                      shadowOpacity: 0.6,
+                      shadowRadius: 20,
+                      shadowOffset: { width: 0, height: 0 },
+                      elevation: 8,
                     }}
                   >
                     <Text style={{ fontSize: 64 }}>{phase === 'listening' ? '⏹️' : '🎙️'}</Text>

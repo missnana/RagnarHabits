@@ -15,12 +15,16 @@ export const palette = {
   charcoal: '#2E2621',
   charcoalDeep: '#1A1512',
   rose: '#B15C77',
+  roseDeep: '#8C3F5C',
   mint: '#A9D3CB',
   indigo: '#585A8C',
   danger: '#C1483F',
   white: '#FFFFFF',
   black: '#000000',
 } as const;
+
+/** Farbfolge für den schimmernden (iridiszierenden) Halo-Effekt am Mikro-Button. */
+export const iridescent = [palette.roseDeep, palette.indigo, palette.mint, palette.ochre, palette.roseDeep] as const;
 
 export interface Theme {
   mode: 'light' | 'dark';
@@ -48,7 +52,7 @@ export interface Theme {
 export const lightTheme: Theme = {
   mode: 'light',
   background: palette.cream,
-  backgroundGradient: [palette.ochreLight, palette.cream],
+  backgroundGradient: ['#F1E1E3', palette.cream],
   surface: 'rgba(255, 255, 255, 0.55)',
   surfaceAlt: 'rgba(255, 255, 255, 0.35)',
   surfaceBorder: 'rgba(255, 255, 255, 0.6)',
@@ -59,8 +63,8 @@ export const lightTheme: Theme = {
   textMuted: 'rgba(46, 38, 33, 0.6)',
   primary: palette.forest,
   primaryText: palette.offWhite,
-  accent: palette.ochreDeep,
-  accentText: palette.charcoalDeep,
+  accent: palette.roseDeep,
+  accentText: palette.offWhite,
   secondary: palette.rose,
   danger: palette.danger,
   warning: palette.ochreDeep,

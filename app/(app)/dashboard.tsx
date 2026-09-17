@@ -1,9 +1,13 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { FlatList, RefreshControl, Text, View } from 'react-native';
-import { Card, Screen, ScreenTitle, StatTile } from '../../components/ui';
+import { Card, Content, Screen, ScreenTitle, StatTile } from '../../components/ui';
+import { AnimatedPressable } from '../../components/AnimatedPressable';
+import { WeekStrip, currentWeekDays, isSameDay } from '../../components/WeekStrip';
+import { EntryEditModal } from '../../components/EntryEditModal';
 import { useHousehold } from '../../lib/hooks/useHousehold';
 import { useEvents } from '../../lib/hooks/useEvents';
 import { useTheme } from '../../lib/hooks/useColorScheme';
+import { predictNext, formatRelative } from '../../lib/predict';
 import { behaviorCategories, spacing, typography } from '../../lib/theme';
 import type { BehaviorEventRow } from '../../lib/database.types';
 
@@ -16,72 +20,112 @@ function formatTime(iso: string) {
   return date.toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 }
 
+function formatDay(d: Date) {
+  return d.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: '2-digit' });
+}
+
 export default function DashboardScreen() {
   const theme = useTheme();
   const { household, dogs } = useHousehold();
   const { events, loading, reload } = useEvents(household?.id);
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+  const [editing, setEditing] = useState<BehaviorEventRow | null>(null);
+
+  const weekDays = currentWeekDays();
+  const weekStart = weekDays[0];
+  const weekEnd = weekDays[6];
+
+  const visibleEvents = useMemo(() => {
+    if (selectedDay) {
+      return events.filter((e) => isSameDay(new Date(e.occurred_at), selectedDay));
+    }
+    return events.filter((e) => {
+      const d = new Date(e.occurred_at);
+      return d >= weekStart && d <= new Date(weekEnd.getTime() + 24 * 60 * 60 * 1000 - 1);
+    });
+  }, [events, selectedDay, weekStart, weekEnd]);
 
   const stats = useMemo(() => {
-    const last24h = events.filter((e) => Date.now() - new Date(e.occurred_at).getTime() < 24 * 60 * 60 * 1000);
     const byCategory = new Map<string, number>();
-    for (const e of last24h) byCategory.set(e.category, (byCategory.get(e.category) ?? 0) + 1);
+    for (const e of visibleEvents) byCategory.set(e.category, (byCategory.get(e.category) ?? 0) + 1);
     const topEntry = [...byCategory.entries()].sort((a, b) => b[1] - a[1])[0];
     return {
-      totalToday: last24h.length,
-      total: events.length,
+      total: visibleEvents.length,
       topCategory: topEntry ? categoryMeta(topEntry[0]) : null,
       topCount: topEntry?.[1] ?? 0,
     };
-  }, [events]);
+  }, [visibleEvents]);
+
+  const prediction = useMemo(() => predictNext(events), [events]);
 
   const renderItem = ({ item }: { item: BehaviorEventRow }) => {
     const meta = categoryMeta(item.category);
     return (
-      <Card style={{ flexDirection: 'row', alignItems: 'center', marginHorizontal: spacing.md, marginBottom: spacing.sm }}>
-        <Text style={{ fontSize: 22, marginRight: spacing.md }}>{meta.icon}</Text>
-        <View style={{ flex: 1 }}>
-          <Text style={[typography.subtitle, { color: theme.text }]}>{meta.label}</Text>
-          {item.note ? <Text style={{ color: theme.textMuted, marginTop: 2 }}>{item.note}</Text> : null}
-        </View>
-        <Text style={{ color: theme.textMuted, fontSize: 12 }}>{formatTime(item.occurred_at)}</Text>
-      </Card>
+      <AnimatedPressable onPress={() => setEditing(item)} style={{ marginHorizontal: spacing.md, marginBottom: spacing.sm }}>
+        <Card style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Text style={{ fontSize: 22, marginRight: spacing.md }}>{meta.icon}</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={[typography.subtitle, { color: theme.text }]}>{meta.label}</Text>
+            {item.note ? <Text style={{ color: theme.textMuted, marginTop: 2 }}>{item.note}</Text> : null}
+          </View>
+          <Text style={{ color: theme.textMuted, fontSize: 12 }}>{formatTime(item.occurred_at)}</Text>
+        </Card>
+      </AnimatedPressable>
     );
   };
 
   return (
     <Screen edges={['bottom']} background={false}>
       <FlatList
-        data={events}
+        data={visibleEvents}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         refreshControl={<RefreshControl refreshing={loading} onRefresh={reload} tintColor={theme.primary} />}
         ListHeaderComponent={
           <View>
-            <ScreenTitle>
-              {dogs[0]?.name ? `${dogs[0].name}s Tag` : 'Dashboard'}
-            </ScreenTitle>
-            <View style={{ flexDirection: 'row', gap: spacing.sm, marginHorizontal: spacing.md, marginBottom: spacing.md }}>
-              <StatTile label="Einträge (24h)" value={String(stats.totalToday)} />
-              <StatTile
-                label={stats.topCategory ? `Häufigst: ${stats.topCategory.label}` : 'Noch keine Daten'}
-                value={stats.topCategory ? String(stats.topCount) : '–'}
-                color={stats.topCategory?.color}
-              />
-            </View>
+            <ScreenTitle>{dogs[0]?.name ? `${dogs[0].name}s Woche` : 'Dashboard'}</ScreenTitle>
+
+            <Content style={{ marginBottom: spacing.md }}>
+              <WeekStrip selected={selectedDay} onSelect={setSelectedDay} />
+
+              {prediction && (
+                <Card style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                  <Text style={{ fontSize: 22 }}>{prediction.category.icon}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[typography.caption, { color: theme.textMuted }]}>Vermutlich als Nächstes</Text>
+                    <Text style={[typography.subtitle, { color: theme.text }]}>
+                      {prediction.category.label} · {formatRelative(prediction.predictedAt)}
+                    </Text>
+                  </View>
+                </Card>
+              )}
+
+              <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+                <StatTile label={selectedDay ? formatDay(selectedDay) : 'Diese Woche'} value={String(stats.total)} />
+                <StatTile
+                  label={stats.topCategory ? `Häufigst: ${stats.topCategory.label}` : 'Noch keine Daten'}
+                  value={stats.topCategory ? String(stats.topCount) : '–'}
+                  color={stats.topCategory?.color}
+                />
+              </View>
+            </Content>
+
             <Text style={[typography.subtitle, { color: theme.text, marginHorizontal: spacing.md, marginBottom: spacing.sm }]}>
-              Letzte Einträge
+              {selectedDay ? formatDay(selectedDay) : 'Einträge dieser Woche'}
             </Text>
           </View>
         }
         ListEmptyComponent={
           !loading ? (
             <Text style={{ color: theme.textMuted, textAlign: 'center', marginTop: spacing.lg }}>
-              Noch keine Einträge. Leg unter "Eintragen" den ersten Eintrag an.
+              {selectedDay ? 'Keine Einträge an diesem Tag.' : 'Noch keine Einträge. Leg unter "Eintragen" den ersten Eintrag an.'}
             </Text>
           ) : null
         }
         contentContainerStyle={{ paddingBottom: spacing.xl }}
       />
+
+      <EntryEditModal event={editing} onClose={() => setEditing(null)} onSaved={reload} />
     </Screen>
   );
 }
