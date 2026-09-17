@@ -1,33 +1,43 @@
 // Zentrales Design-System für RagnarHabits.
-// Warme, freundliche Palette passend zu einem Hunde-Tracker.
+// Palette von der UX-Designerin vorgegeben: dunkles Grün + Ocker dominieren,
+// Rose/Mauve, Mint und Indigo sind sparsame Akzente, Creme/Braun sind Neutrale.
 
 export const palette = {
-  clay: '#C96F4A', // primäre Akzentfarbe (warmes Terrakotta)
-  clayDark: '#A6552F',
-  clayLight: '#F1C6A9',
-  moss: '#5B7B5A', // sekundär (gedämpftes Grün)
-  sand: '#F6EFE6',
-  sandDark: '#EDE1D1',
-  ink: '#2B241E',
-  inkMuted: '#6B6058',
+  forestDeep: '#1E3226',
+  forest: '#2C4A34',
+  forestLight: '#4F7A5C',
+  ochreDeep: '#B98A2E',
+  ochre: '#EFC873',
+  ochreLight: '#F6DFA6',
+  cream: '#F6F1E7',
+  offWhite: '#FBFAF7',
+  taupe: '#C7A489',
+  charcoal: '#2E2621',
+  charcoalDeep: '#1A1512',
+  rose: '#B15C77',
+  mint: '#A9D3CB',
+  indigo: '#585A8C',
+  danger: '#C1483F',
   white: '#FFFFFF',
   black: '#000000',
-  danger: '#C0433B',
-  warning: '#D79A3B',
-  success: '#4C8B5A',
-  overlay: 'rgba(43, 36, 30, 0.5)',
 } as const;
 
 export interface Theme {
   mode: 'light' | 'dark';
   background: string;
+  backgroundGradient: [string, string];
   surface: string;
   surfaceAlt: string;
+  surfaceBorder: string;
+  glassTint: 'light' | 'dark';
+  glassIntensity: number;
   border: string;
   text: string;
   textMuted: string;
   primary: string;
   primaryText: string;
+  accent: string;
+  accentText: string;
   secondary: string;
   danger: string;
   warning: string;
@@ -37,35 +47,47 @@ export interface Theme {
 
 export const lightTheme: Theme = {
   mode: 'light',
-  background: palette.sand,
-  surface: palette.white,
-  surfaceAlt: palette.sandDark,
-  border: '#E3D6C4',
-  text: palette.ink,
-  textMuted: palette.inkMuted,
-  primary: palette.clay,
-  primaryText: palette.white,
-  secondary: palette.moss,
+  background: palette.cream,
+  backgroundGradient: [palette.ochreLight, palette.cream],
+  surface: 'rgba(255, 255, 255, 0.55)',
+  surfaceAlt: 'rgba(255, 255, 255, 0.35)',
+  surfaceBorder: 'rgba(255, 255, 255, 0.6)',
+  glassTint: 'light',
+  glassIntensity: 45,
+  border: 'rgba(46, 38, 33, 0.12)',
+  text: palette.charcoal,
+  textMuted: 'rgba(46, 38, 33, 0.6)',
+  primary: palette.forest,
+  primaryText: palette.offWhite,
+  accent: palette.ochreDeep,
+  accentText: palette.charcoalDeep,
+  secondary: palette.rose,
   danger: palette.danger,
-  warning: palette.warning,
-  success: palette.success,
-  overlay: palette.overlay,
+  warning: palette.ochreDeep,
+  success: palette.forestLight,
+  overlay: 'rgba(30, 26, 20, 0.45)',
 };
 
 export const darkTheme: Theme = {
   mode: 'dark',
-  background: '#1C1712',
-  surface: '#241E17',
-  surfaceAlt: '#2E2620',
-  border: '#3A3128',
-  text: '#F3EAE0',
-  textMuted: '#B8AA9B',
-  primary: palette.clayLight,
-  primaryText: palette.ink,
-  secondary: '#8DAE8B',
+  background: palette.charcoalDeep,
+  backgroundGradient: [palette.forestDeep, palette.charcoalDeep],
+  surface: 'rgba(255, 255, 255, 0.08)',
+  surfaceAlt: 'rgba(255, 255, 255, 0.05)',
+  surfaceBorder: 'rgba(255, 255, 255, 0.14)',
+  glassTint: 'dark',
+  glassIntensity: 55,
+  border: 'rgba(255, 255, 255, 0.12)',
+  text: palette.cream,
+  textMuted: 'rgba(246, 241, 231, 0.62)',
+  primary: palette.forestLight,
+  primaryText: palette.charcoalDeep,
+  accent: palette.ochre,
+  accentText: palette.charcoalDeep,
+  secondary: palette.mint,
   danger: '#E17870',
-  warning: '#E7B463',
-  success: '#7BB786',
+  warning: palette.ochre,
+  success: palette.forestLight,
   overlay: 'rgba(0, 0, 0, 0.6)',
 };
 
@@ -94,16 +116,16 @@ export const typography = {
 };
 
 export const behaviorCategories = [
-  { key: 'bark', label: 'Bellen', color: '#C96F4A', icon: '📢' },
-  { key: 'walk', label: 'Spaziergang', color: '#5B7B5A', icon: '🚶' },
-  { key: 'eat', label: 'Fressen', color: '#D79A3B', icon: '🍖' },
-  { key: 'sleep', label: 'Schlafen', color: '#6E7FA6', icon: '💤' },
-  { key: 'play', label: 'Spielen', color: '#B75FA0', icon: '🎾' },
-  { key: 'toilet', label: 'Lösen', color: '#8A8F6B', icon: '💩' },
-  { key: 'training', label: 'Training', color: '#4C8B5A', icon: '🎯' },
-  { key: 'vet', label: 'Tierarzt', color: '#C0433B', icon: '🏥' },
-  { key: 'anxiety', label: 'Unruhe/Angst', color: '#9A5B8C', icon: '😟' },
-  { key: 'other', label: 'Sonstiges', color: '#6B6058', icon: '📝' },
+  { key: 'bark', label: 'Bellen', color: palette.rose, icon: '📢' },
+  { key: 'walk', label: 'Spaziergang', color: palette.forest, icon: '🚶' },
+  { key: 'eat', label: 'Fressen', color: palette.ochreDeep, icon: '🍖' },
+  { key: 'sleep', label: 'Schlafen', color: palette.indigo, icon: '💤' },
+  { key: 'play', label: 'Spielen', color: palette.rose, icon: '🎾' },
+  { key: 'toilet', label: 'Lösen', color: palette.taupe, icon: '💩' },
+  { key: 'training', label: 'Training', color: palette.forestLight, icon: '🎯' },
+  { key: 'vet', label: 'Tierarzt', color: palette.danger, icon: '🏥' },
+  { key: 'anxiety', label: 'Unruhe/Angst', color: palette.indigo, icon: '😟' },
+  { key: 'other', label: 'Sonstiges', color: palette.mint, icon: '📝' },
 ] as const;
 
 export type BehaviorCategoryKey = (typeof behaviorCategories)[number]['key'];

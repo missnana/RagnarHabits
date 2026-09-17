@@ -49,7 +49,7 @@ export default function DashboardScreen() {
   };
 
   return (
-    <Screen edges={['bottom']}>
+    <Screen edges={['bottom']} background={false}>
       <FlatList
         data={events}
         keyExtractor={(item) => item.id}

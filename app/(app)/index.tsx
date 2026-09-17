@@ -1,10 +1,11 @@
-import { useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Alert, Animated, ScrollView, Text, View } from 'react-native';
 import {
   ExpoSpeechRecognitionModule,
   useSpeechRecognitionEvent,
 } from 'expo-speech-recognition';
-import { Card, CategoryPill, FormInput, PrimaryButton, Screen, ScreenTitle } from '../../components/ui';
+import { Card, CategoryPill, FadeIn, FormInput, PrimaryButton, Screen, ScreenTitle } from '../../components/ui';
+import { AnimatedPressable } from '../../components/AnimatedPressable';
 import { useTheme } from '../../lib/hooks/useColorScheme';
 import { useAuth } from '../../lib/hooks/useAuth';
 import { useHousehold } from '../../lib/hooks/useHousehold';
@@ -26,6 +27,21 @@ export default function LogScreen() {
   const [category, setCategory] = useState<BehaviorCategoryKey>('other');
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
+  const pulse = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (phase !== 'listening') {
+      pulse.stopAnimation();
+      pulse.setValue(0);
+      return;
+    }
+    pulse.setValue(0);
+    const loop = Animated.loop(
+      Animated.timing(pulse, { toValue: 1, duration: 1400, useNativeDriver: true })
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [phase, pulse]);
 
   useSpeechRecognitionEvent('result', (event) => {
     const text = event.results[0]?.transcript ?? '';
@@ -88,25 +104,41 @@ export default function LogScreen() {
   };
 
   return (
-    <Screen edges={['bottom']}>
+    <Screen edges={['bottom']} background={false}>
       <ScrollView contentContainerStyle={{ paddingBottom: spacing.xl, flexGrow: 1 }}>
         <ScreenTitle>Eintragen</ScreenTitle>
 
         {phase !== 'review' ? (
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'flex-end', paddingBottom: spacing.xxl + spacing.lg }}>
-            <Pressable
-              onPress={phase === 'listening' ? stopListening : startListening}
-              style={{
-                width: 180,
-                height: 180,
-                borderRadius: 90,
-                backgroundColor: phase === 'listening' ? theme.danger : theme.primary,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Text style={{ fontSize: 64 }}>{phase === 'listening' ? '⏹️' : '🎙️'}</Text>
-            </Pressable>
+            <View style={{ width: 180, height: 180, alignItems: 'center', justifyContent: 'center' }}>
+              {phase === 'listening' && (
+                <Animated.View
+                  style={{
+                    position: 'absolute',
+                    width: 180,
+                    height: 180,
+                    borderRadius: 90,
+                    backgroundColor: theme.danger,
+                    opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.35, 0] }),
+                    transform: [{ scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.35] }) }],
+                  }}
+                />
+              )}
+              <AnimatedPressable onPress={phase === 'listening' ? stopListening : startListening}>
+                <View
+                  style={{
+                    width: 180,
+                    height: 180,
+                    borderRadius: 90,
+                    backgroundColor: phase === 'listening' ? theme.danger : theme.accent,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Text style={{ fontSize: 64 }}>{phase === 'listening' ? '⏹️' : '🎙️'}</Text>
+                </View>
+              </AnimatedPressable>
+            </View>
             <Text style={[typography.subtitle, { color: theme.text, marginTop: spacing.lg, textAlign: 'center' }]}>
               {phase === 'listening' ? 'Ich höre zu...' : 'Zum Starten tippen'}
             </Text>
@@ -117,6 +149,7 @@ export default function LogScreen() {
             </Text>
           </View>
         ) : (
+          <FadeIn>
           <View style={{ paddingHorizontal: spacing.md }}>
             <Card style={{ gap: spacing.sm }}>
               <Text style={[typography.caption, { color: theme.textMuted }]}>Erkannt</Text>
@@ -149,6 +182,7 @@ export default function LogScreen() {
               <PrimaryButton label="Neue Aufnahme" onPress={discardAndRestart} variant="secondary" />
             </View>
           </View>
+          </FadeIn>
         )}
       </ScrollView>
     </Screen>

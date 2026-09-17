@@ -79,7 +79,7 @@ export default function DogScreen() {
   };
 
   return (
-    <Screen edges={['bottom']}>
+    <Screen edges={['bottom']} background={false}>
       <ScrollView contentContainerStyle={{ paddingBottom: spacing.xl }}>
         <ScreenTitle>Steckbrief</ScreenTitle>
 

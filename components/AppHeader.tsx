@@ -1,6 +1,7 @@
 import { useRouter, usePathname, type Href } from 'expo-router';
-import { useState } from 'react';
-import { Modal, Pressable, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Animated, Modal, Pressable, Text, View } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../lib/hooks/useColorScheme';
 import { radius, spacing } from '../lib/theme';
@@ -20,74 +21,90 @@ export function AppHeader() {
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
   const [open, setOpen] = useState(false);
+  const anim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.spring(anim, { toValue: open ? 1 : 0, useNativeDriver: true, speed: 22, bounciness: 6 }).start();
+  }, [open, anim]);
 
   return (
-    <View style={{ paddingTop: insets.top, backgroundColor: theme.background }}>
-      <View
+    <View style={{ paddingTop: insets.top }}>
+      <BlurView
+        intensity={theme.glassIntensity}
+        tint={theme.glassTint}
         style={{
           height: HEADER_HEIGHT,
           flexDirection: 'row',
           justifyContent: 'flex-end',
           alignItems: 'center',
           paddingHorizontal: spacing.md,
+          borderBottomWidth: 1,
+          borderBottomColor: theme.surfaceBorder,
         }}
       >
         <Pressable onPress={() => setOpen(true)} hitSlop={8}>
           <Text style={{ fontSize: 22, color: theme.text }}>☰</Text>
         </Pressable>
-      </View>
+      </BlurView>
 
       <Modal transparent visible={open} animationType="fade" onRequestClose={() => setOpen(false)}>
         <Pressable style={{ flex: 1 }} onPress={() => setOpen(false)}>
-          <View
+          <Animated.View
             style={{
               position: 'absolute',
               top: insets.top + HEADER_HEIGHT,
               right: spacing.md,
               width: 210,
-              backgroundColor: theme.surface,
               borderRadius: radius.md,
-              borderWidth: 1,
-              borderColor: theme.border,
-              paddingVertical: spacing.xs,
-              shadowColor: '#000',
-              shadowOpacity: 0.15,
-              shadowRadius: 12,
-              shadowOffset: { width: 0, height: 4 },
-              elevation: 6,
+              overflow: 'hidden',
+              opacity: anim,
+              transform: [
+                { scale: anim.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1] }) },
+                { translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [-8, 0] }) },
+              ],
             }}
           >
-            {NAV_ITEMS.map((item) => {
-              const active = pathname === item.href;
-              return (
-                <Pressable
-                  key={item.label}
-                  onPress={() => {
-                    setOpen(false);
-                    router.push(item.href);
-                  }}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    paddingVertical: spacing.sm,
-                    paddingHorizontal: spacing.md,
-                    backgroundColor: active ? theme.surfaceAlt : 'transparent',
-                  }}
-                >
-                  <Text style={{ fontSize: 16 }}>{item.icon}</Text>
-                  <Text
+            <BlurView
+              intensity={theme.glassIntensity + 15}
+              tint={theme.glassTint}
+              style={{
+                borderWidth: 1,
+                borderColor: theme.surfaceBorder,
+                paddingVertical: spacing.xs,
+              }}
+            >
+              {NAV_ITEMS.map((item) => {
+                const active = pathname === item.href;
+                return (
+                  <Pressable
+                    key={item.label}
+                    onPress={() => {
+                      setOpen(false);
+                      router.push(item.href);
+                    }}
                     style={{
-                      marginLeft: spacing.sm,
-                      color: theme.text,
-                      fontWeight: active ? '700' : '500',
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      paddingVertical: spacing.sm,
+                      paddingHorizontal: spacing.md,
+                      backgroundColor: active ? theme.surfaceAlt : 'transparent',
                     }}
                   >
-                    {item.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
+                    <Text style={{ fontSize: 16 }}>{item.icon}</Text>
+                    <Text
+                      style={{
+                        marginLeft: spacing.sm,
+                        color: theme.text,
+                        fontWeight: active ? '700' : '500',
+                      }}
+                    >
+                      {item.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </BlurView>
+          </Animated.View>
         </Pressable>
       </Modal>
     </View>
