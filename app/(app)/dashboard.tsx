@@ -8,6 +8,7 @@ import { useHousehold } from '../../lib/hooks/useHousehold';
 import { useEvents } from '../../lib/hooks/useEvents';
 import { useTheme } from '../../lib/hooks/useColorScheme';
 import { predictNext, formatRelative, computeTriggerCorrelations, toiletSummary } from '../../lib/predict';
+import { playSuggestions, pickSuggestion } from '../../lib/suggestions';
 import { behaviorCategories, spacing, typography } from '../../lib/theme';
 import type { BehaviorEventRow } from '../../lib/database.types';
 
@@ -57,6 +58,10 @@ export default function DashboardScreen() {
   }, [visibleEvents]);
 
   const prediction = useMemo(() => predictNext(events), [events]);
+  const playSuggestion = useMemo(
+    () => (prediction?.category.key === 'play' ? pickSuggestion(playSuggestions, new Date().getDate()) : null),
+    [prediction]
+  );
   const correlations = useMemo(() => computeTriggerCorrelations(events), [events]);
   const toilet = useMemo(() => toiletSummary(events), [events]);
 
@@ -87,18 +92,27 @@ export default function DashboardScreen() {
           <View>
             <ScreenTitle>{dogs[0]?.name ? `${dogs[0].name}s Woche` : 'Dashboard'}</ScreenTitle>
 
-            <Content style={{ marginBottom: spacing.md }}>
+            <View style={{ paddingHorizontal: spacing.xs, marginBottom: spacing.md }}>
               <WeekStrip selected={selectedDay} onSelect={setSelectedDay} />
+            </View>
 
+            <Content style={{ marginBottom: spacing.md }}>
               {prediction && (
-                <Card style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-                  <Text style={{ fontSize: 22 }}>{prediction.category.icon}</Text>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[typography.caption, { color: theme.textMuted }]}>Vermutlich als Nächstes</Text>
-                    <Text style={[typography.subtitle, { color: theme.text }]}>
-                      {prediction.category.label} · {formatRelative(prediction.predictedAt)}
-                    </Text>
+                <Card style={{ gap: spacing.sm }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                    <Text style={{ fontSize: 22 }}>{prediction.category.icon}</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[typography.caption, { color: theme.textMuted }]}>Vermutlich als Nächstes</Text>
+                      <Text style={[typography.subtitle, { color: theme.text }]}>
+                        {prediction.category.label} · {formatRelative(prediction.predictedAt)}
+                      </Text>
+                    </View>
                   </View>
+                  {playSuggestion && (
+                    <Text style={{ color: theme.textMuted, fontStyle: 'italic' }}>
+                      Idee: {playSuggestion}
+                    </Text>
+                  )}
                 </Card>
               )}
 
