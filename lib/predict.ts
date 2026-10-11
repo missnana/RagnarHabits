@@ -6,6 +6,16 @@ export interface Prediction {
   predictedAt: number;
 }
 
+// Hunde verändern ihre Muster, je älter sie werden — ein Durchschnitt aus der
+// Welpenzeit wäre Monate später irreführend. Alle Vorhersagen schauen daher
+// nur auf die letzten 30 Tage statt auf die komplette Historie.
+const RECENCY_WINDOW_DAYS = 30;
+
+function recentEvents(events: BehaviorEventRow[]): BehaviorEventRow[] {
+  const cutoff = Date.now() - RECENCY_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+  return events.filter((e) => new Date(e.occurred_at).getTime() >= cutoff);
+}
+
 /**
  * Sehr einfache Heuristik: nimmt die Kategorie mit den meisten bisherigen
  * Einträgen (mind. 3, um einen Durchschnitt zu rechtfertigen), berechnet den
@@ -13,7 +23,8 @@ export interface Prediction {
  * dem letzten Vorkommen. Kein Ersatz für echte Vorhersage-Modelle, aber ein
  * nützlicher erster Anhaltspunkt ("wann kommt vermutlich der nächste...").
  */
-export function predictNext(events: BehaviorEventRow[]): Prediction | null {
+export function predictNext(allEvents: BehaviorEventRow[]): Prediction | null {
+  const events = recentEvents(allEvents);
   const byCategory = new Map<string, BehaviorEventRow[]>();
   for (const e of events) {
     const list = byCategory.get(e.category) ?? [];
@@ -66,7 +77,8 @@ const CORRELATION_WINDOW_MINUTES = 60;
  * dazwischen?" Betrachtet je Trigger-Ereignis die Lösen-Einträge innerhalb
  * eines engen Zeitfensters danach.
  */
-export function computeTriggerCorrelations(events: BehaviorEventRow[]): TriggerCorrelation[] {
+export function computeTriggerCorrelations(allEvents: BehaviorEventRow[]): TriggerCorrelation[] {
+  const events = recentEvents(allEvents);
   const toiletEvents = [...events.filter((e) => e.category === 'toilet')].sort(
     (a, b) => new Date(a.occurred_at).getTime() - new Date(b.occurred_at).getTime()
   );
@@ -103,6 +115,61 @@ export function computeTriggerCorrelations(events: BehaviorEventRow[]): TriggerC
       : null;
     return { trigger: category, avgMinutes, successCount, failedAttemptsAfter };
   }).filter((r) => r.successCount > 0 || r.failedAttemptsAfter > 0);
+}
+
+export interface ZoomiesForecast {
+  avgMinutesSinceWake: number;
+  sampleSize: number;
+  minutesSinceLastWake: number;
+  minutesUntilRisk: number;
+}
+
+const ZOOMIES_WINDOW_MINUTES = 120;
+
+/**
+ * "Wie lange nach dem Aufwachen dauert es im Schnitt bis zu Zoomies, und wie
+ * weit ist der Hund gerade an diesem Punkt?" — ein Frühwarn-Signal, um ggf.
+ * vorher gezielt zur Ruhe zu kommen. Nur wenn seit dem letzten Aufwachen noch
+ * keine Zoomies passiert sind und die Zeit seitdem noch im plausiblen Fenster
+ * liegt.
+ */
+export function computeZoomiesForecast(allEvents: BehaviorEventRow[]): ZoomiesForecast | null {
+  const events = recentEvents(allEvents);
+  const wakeEvents = [...events.filter((e) => e.category === 'wake')].sort(
+    (a, b) => new Date(a.occurred_at).getTime() - new Date(b.occurred_at).getTime()
+  );
+  const zoomiesEvents = events.filter((e) => e.category === 'zoomies');
+
+  const minutesToZoomies: number[] = [];
+  for (const wake of wakeEvents) {
+    const wakeTime = new Date(wake.occurred_at).getTime();
+    const windowEnd = wakeTime + ZOOMIES_WINDOW_MINUTES * 60 * 1000;
+    const nextZoomies = zoomiesEvents.find((z) => {
+      const z_ms = new Date(z.occurred_at).getTime();
+      return z_ms > wakeTime && z_ms <= windowEnd;
+    });
+    if (nextZoomies) {
+      minutesToZoomies.push((new Date(nextZoomies.occurred_at).getTime() - wakeTime) / 60000);
+    }
+  }
+  if (minutesToZoomies.length < 2) return null;
+
+  const avgMinutesSinceWake = minutesToZoomies.reduce((a, b) => a + b, 0) / minutesToZoomies.length;
+
+  const lastWake = wakeEvents[wakeEvents.length - 1];
+  if (!lastWake) return null;
+  const lastWakeAt = new Date(lastWake.occurred_at).getTime();
+  const minutesSinceLastWake = (Date.now() - lastWakeAt) / 60000;
+
+  const zoomiesAlreadyHappened = zoomiesEvents.some((z) => new Date(z.occurred_at).getTime() > lastWakeAt);
+  if (zoomiesAlreadyHappened || minutesSinceLastWake > ZOOMIES_WINDOW_MINUTES) return null;
+
+  return {
+    avgMinutesSinceWake,
+    sampleSize: minutesToZoomies.length,
+    minutesSinceLastWake,
+    minutesUntilRisk: avgMinutesSinceWake - minutesSinceLastWake,
+  };
 }
 
 export interface ToiletSummary {

@@ -146,7 +146,7 @@ export const historicalEvents = [
     "occurred_at": "2026-09-16T17:54:00"
   },
   {
-    "category": "play",
+    "category": "zoomies",
     "outcome": null,
     "note": "Zoomies",
     "occurred_at": "2026-09-16T18:00:00"
@@ -392,7 +392,7 @@ export const historicalEvents = [
     "occurred_at": "2026-09-17T12:16:00"
   },
   {
-    "category": "play",
+    "category": "zoomies",
     "outcome": null,
     "note": "Leichte Zoomies starten",
     "occurred_at": "2026-09-17T12:18:00"
@@ -446,7 +446,7 @@ export const historicalEvents = [
     "occurred_at": "2026-09-17T12:35:00"
   },
   {
-    "category": "play",
+    "category": "zoomies",
     "outcome": null,
     "note": "Zoomies gestartet",
     "occurred_at": "2026-09-17T12:36:00"
@@ -542,7 +542,7 @@ export const historicalEvents = [
     "occurred_at": "2026-09-17T17:05:00"
   },
   {
-    "category": "play",
+    "category": "zoomies",
     "outcome": null,
     "note": "Leichte Zoomies (vor Garten) (Zeit geschätzt, vor 18:00-Gartengang)",
     "occurred_at": "2026-09-17T17:55:00"

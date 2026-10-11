@@ -7,7 +7,13 @@ import { EntryEditModal } from '../../components/EntryEditModal';
 import { useHousehold } from '../../lib/hooks/useHousehold';
 import { useEvents } from '../../lib/hooks/useEvents';
 import { useTheme } from '../../lib/hooks/useColorScheme';
-import { predictNext, formatRelative, computeTriggerCorrelations, toiletSummary } from '../../lib/predict';
+import {
+  predictNext,
+  formatRelative,
+  computeTriggerCorrelations,
+  computeZoomiesForecast,
+  toiletSummary,
+} from '../../lib/predict';
 import { playSuggestions, pickSuggestion } from '../../lib/suggestions';
 import { behaviorCategories, spacing, typography } from '../../lib/theme';
 import type { BehaviorEventRow } from '../../lib/database.types';
@@ -15,6 +21,8 @@ import type { BehaviorEventRow } from '../../lib/database.types';
 function categoryMeta(key: string) {
   return behaviorCategories.find((c) => c.key === key) ?? behaviorCategories[behaviorCategories.length - 1];
 }
+
+const zoomiesCategory = categoryMeta('zoomies');
 
 function formatTime(iso: string) {
   const date = new Date(iso);
@@ -63,6 +71,7 @@ export default function DashboardScreen() {
     [prediction]
   );
   const correlations = useMemo(() => computeTriggerCorrelations(events), [events]);
+  const zoomiesForecast = useMemo(() => computeZoomiesForecast(events), [events]);
   const toilet = useMemo(() => toiletSummary(events), [events]);
 
   const renderItem = ({ item }: { item: BehaviorEventRow }) => {
@@ -97,6 +106,27 @@ export default function DashboardScreen() {
             </View>
 
             <Content style={{ marginBottom: spacing.md }}>
+              {zoomiesForecast && (
+                <Card style={{ gap: spacing.xs, borderColor: zoomiesCategory.color }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                    <Text style={{ fontSize: 22 }}>{zoomiesCategory.icon}</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[typography.caption, { color: theme.textMuted }]}>Zoomies-Risiko</Text>
+                      <Text style={[typography.subtitle, { color: theme.text }]}>
+                        {zoomiesForecast.minutesUntilRisk > 0
+                          ? `in ca. ${Math.round(zoomiesForecast.minutesUntilRisk)} Min.`
+                          : 'Fenster ist da — evtl. schon unruhig?'}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={{ color: theme.textMuted, fontSize: 12 }}>
+                    Seit dem Aufwachen vor {Math.round(zoomiesForecast.minutesSinceLastWake)} Min. — vielleicht
+                    jetzt kurz zur Ruhe kommen, bevor es losgeht? (Basis: {zoomiesForecast.sampleSize}×
+                    beobachtet)
+                  </Text>
+                </Card>
+              )}
+
               {prediction && (
                 <Card style={{ gap: spacing.sm }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>

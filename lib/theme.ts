@@ -133,6 +133,7 @@ export const behaviorCategories: CategoryMeta[] = [
   { key: 'sleep', label: 'Schlafen', color: palette.indigo, icon: '💤' },
   { key: 'rest', label: 'Ruhe/Crate', color: palette.forestLight, icon: '🛌' },
   { key: 'play', label: 'Spielen', color: palette.rose, icon: '🎾' },
+  { key: 'zoomies', label: 'Zoomies', color: palette.ochre, icon: '🌀' },
   { key: 'cuddle', label: 'Kuscheln', color: palette.roseDeep, icon: '🥰' },
   { key: 'enrichment', label: 'Beschäftigung', color: palette.mint, icon: '🧠' },
   { key: 'reaction', label: 'Reaktion/Geräusch', color: palette.indigo, icon: '😟' },

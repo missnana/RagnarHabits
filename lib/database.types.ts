@@ -7,6 +7,7 @@ export type BehaviorCategoryKey =
   | 'sleep'
   | 'rest'
   | 'play'
+  | 'zoomies'
   | 'cuddle'
   | 'enrichment'
   | 'reaction'

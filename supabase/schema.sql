@@ -59,7 +59,7 @@ create table if not exists behavior_events (
   dog_id uuid not null references dogs (id) on delete cascade,
   category text not null check (
     category in (
-      'toilet', 'eat', 'sleep', 'rest', 'play', 'cuddle', 'enrichment',
+      'toilet', 'eat', 'sleep', 'rest', 'play', 'zoomies', 'cuddle', 'enrichment',
       'reaction', 'social', 'car', 'training', 'wake', 'vet', 'observation', 'other'
     )
   ),

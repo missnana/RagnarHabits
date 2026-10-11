@@ -71,9 +71,18 @@ synchronisiert, ohne manuellen Export/Import.
   erfolgreich gelöst wurde, inkl. erfolgloser Versuche dazwischen — der
   gleiche Gedanke wie die manuelle Analyse in der ursprünglichen
   Excel-Tabelle, jetzt automatisch aus den echten Einträgen berechnet.
+- **Zoomies-Risiko**: eigene Kategorie "Zoomies"; die App merkt sich, wie
+  lange es nach dem Aufwachen im Schnitt bis zu Zoomies dauert, und warnt
+  proaktiv ("Zoomies-Risiko in ca. X Min."), solange seit dem letzten
+  Aufwachen noch keine Zoomies passiert sind — Gelegenheit, vorher gezielt
+  zur Ruhe zu kommen.
 
-Beides sind bewusst einfache, nachvollziehbare Heuristiken (kein
-ML-Modell) — ein guter erster Schritt, der mit mehr Daten zuverlässiger wird.
+Alle Vorhersagen schauen nur auf die **letzten 30 Tage**, nicht die
+komplette Historie — die Muster eines Welpen ändern sich, je älter er wird,
+alte Daten sollen die aktuelle Einschätzung nicht verzerren.
+
+Alles bewusst einfache, nachvollziehbare Heuristiken (kein ML-Modell) — ein
+guter erster Schritt, der mit mehr Daten zuverlässiger wird.
 
 ## Setup
 
