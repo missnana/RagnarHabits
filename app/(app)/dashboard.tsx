@@ -13,6 +13,7 @@ import {
   computeTriggerCorrelations,
   computeZoomiesForecast,
   toiletSummary,
+  sleepSummary,
 } from '../../lib/predict';
 import { playSuggestions, pickSuggestion } from '../../lib/suggestions';
 import { behaviorCategories, spacing, typography } from '../../lib/theme';
@@ -73,6 +74,7 @@ export default function DashboardScreen() {
   const correlations = useMemo(() => computeTriggerCorrelations(events), [events]);
   const zoomiesForecast = useMemo(() => computeZoomiesForecast(events), [events]);
   const toilet = useMemo(() => toiletSummary(events), [events]);
+  const sleep = useMemo(() => sleepSummary(events), [events]);
 
   const renderItem = ({ item }: { item: BehaviorEventRow }) => {
     const meta = categoryMeta(item.category);
@@ -161,6 +163,18 @@ export default function DashboardScreen() {
                   <Text style={[typography.display, { color: theme.primary }]}>{toilet.rate}%</Text>
                   <Text style={{ color: theme.textMuted }}>
                     {toilet.success}× erfolgreich draußen · {toilet.wrongPlace}× falscher Ort · {toilet.fail}× erfolglos
+                  </Text>
+                </Card>
+              )}
+
+              {sleep.total > 0 && (
+                <Card style={{ gap: spacing.xs }}>
+                  <Text style={[typography.subtitle, { color: theme.text }]}>Nächte durchgeschlafen</Text>
+                  <Text style={[typography.display, { color: theme.primary }]}>
+                    {sleep.currentStreak}× in Folge
+                  </Text>
+                  <Text style={{ color: theme.textMuted }}>
+                    {sleep.successRate}% Erfolgsquote über die letzten {sleep.total} erfassten Nächte/Ruhephasen
                   </Text>
                 </Card>
               )}

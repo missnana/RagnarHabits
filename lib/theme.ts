@@ -1,7 +1,7 @@
 // Zentrales Design-System für RagnarHabits.
 // Palette von der UX-Designerin vorgegeben: dunkles Grün + Ocker dominieren,
 // Rose/Mauve, Mint und Indigo sind sparsame Akzente, Creme/Braun sind Neutrale.
-import type { BehaviorCategoryKey, ToiletOutcome } from './database.types';
+import type { BehaviorCategoryKey, EventOutcome } from './database.types';
 
 export const palette = {
   forestDeep: '#1E3226',
@@ -146,8 +146,43 @@ export const behaviorCategories: CategoryMeta[] = [
   { key: 'other', label: 'Sonstiges', color: palette.mint, icon: '❓' },
 ];
 
-export const toiletOutcomes: { key: ToiletOutcome; label: string; color: string; icon: string }[] = [
-  { key: 'success', label: 'Erfolgreich draußen', color: palette.forest, icon: '✅' },
-  { key: 'wrong_place', label: 'Falscher Ort', color: palette.ochreDeep, icon: '⚠️' },
-  { key: 'fail', label: 'Erfolglos', color: palette.danger, icon: '❌' },
-];
+export interface OutcomeOption {
+  key: EventOutcome;
+  label: string;
+  color: string;
+  icon: string;
+}
+
+export interface OutcomePicker {
+  question: string;
+  options: OutcomeOption[];
+}
+
+/**
+ * Das Ergebnis-Feld ist je Kategorie unterschiedlich belegt (gleiche
+ * DB-Werte success/partial/fail, andere Bedeutung/Beschriftung). `null` =
+ * für diese Kategorie kein Ergebnis-Picker anzeigen.
+ */
+export function outcomeOptionsFor(category: BehaviorCategoryKey): OutcomePicker | null {
+  if (category === 'toilet') {
+    return {
+      question: 'Erfolgreich?',
+      options: [
+        { key: 'success', label: 'Erfolgreich draußen', color: palette.forest, icon: '✅' },
+        { key: 'partial', label: 'Falscher Ort', color: palette.ochreDeep, icon: '⚠️' },
+        { key: 'fail', label: 'Erfolglos', color: palette.danger, icon: '❌' },
+      ],
+    };
+  }
+  if (category === 'sleep') {
+    return {
+      question: 'Wie war die Nacht/Ruhephase?',
+      options: [
+        { key: 'success', label: 'Durchgeschlafen', color: palette.forest, icon: '✅' },
+        { key: 'partial', label: 'Kurz wach, selbst beruhigt', color: palette.ochreDeep, icon: '🌙' },
+        { key: 'fail', label: 'Unruhig / musste raus', color: palette.danger, icon: '😣' },
+      ],
+    };
+  }
+  return null;
+}

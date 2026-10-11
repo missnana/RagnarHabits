@@ -103,7 +103,7 @@ export function computeTriggerCorrelations(allEvents: BehaviorEventRow[]): Trigg
           minutesToSuccess.push((new Date(t.occurred_at).getTime() - trigTime) / 60000);
           break;
         }
-        if (t.outcome === 'fail' || t.outcome === 'wrong_place') {
+        if (t.outcome === 'fail' || t.outcome === 'partial') {
           failedAttemptsAfter++;
         }
       }
@@ -183,10 +183,38 @@ export interface ToiletSummary {
 export function toiletSummary(events: BehaviorEventRow[]): ToiletSummary {
   const toiletEvents = events.filter((e) => e.category === 'toilet');
   const success = toiletEvents.filter((e) => e.outcome === 'success').length;
-  const wrongPlace = toiletEvents.filter((e) => e.outcome === 'wrong_place').length;
+  const wrongPlace = toiletEvents.filter((e) => e.outcome === 'partial').length;
   const fail = toiletEvents.filter((e) => e.outcome === 'fail').length;
   const total = toiletEvents.length;
   return { success, wrongPlace, fail, total, rate: total > 0 ? Math.round((success / total) * 100) : null };
+}
+
+export interface SleepSummary {
+  total: number;
+  successRate: number | null;
+  currentStreak: number;
+}
+
+/**
+ * "Wie viele Nächte in Folge durchgeschlafen?" — nur Schlaf-Einträge mit
+ * erfasstem Ergebnis zählen. Betrachtet nur die letzten 30 Tage: der
+ * Fortschritt soll sichtbar bleiben, auch wenn die ersten unruhigen Wochen
+ * die Quote sonst dauerhaft nach unten ziehen würden.
+ */
+export function sleepSummary(allEvents: BehaviorEventRow[]): SleepSummary {
+  const sleepEvents = [...recentEvents(allEvents).filter((e) => e.category === 'sleep' && e.outcome)].sort(
+    (a, b) => new Date(a.occurred_at).getTime() - new Date(b.occurred_at).getTime()
+  );
+  const total = sleepEvents.length;
+  const successCount = sleepEvents.filter((e) => e.outcome === 'success').length;
+
+  let currentStreak = 0;
+  for (let i = sleepEvents.length - 1; i >= 0; i--) {
+    if (sleepEvents[i].outcome === 'success') currentStreak++;
+    else break;
+  }
+
+  return { total, successRate: total > 0 ? Math.round((successCount / total) * 100) : null, currentStreak };
 }
 
 export function formatRelative(targetMs: number): string {

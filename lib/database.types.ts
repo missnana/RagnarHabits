@@ -19,8 +19,11 @@ export type BehaviorCategoryKey =
   | 'observation'
   | 'other';
 
-/** Nur für category = 'toilet' relevant. */
-export type ToiletOutcome = 'success' | 'wrong_place' | 'fail';
+/**
+ * Generisches Ergebnis-Feld. Bedeutung hängt von der Kategorie ab — siehe
+ * `outcomeOptionsFor` in lib/theme.ts (aktuell: toilet, sleep).
+ */
+export type EventOutcome = 'success' | 'partial' | 'fail';
 
 export interface HouseholdRow {
   id: string;
@@ -46,7 +49,7 @@ export interface BehaviorEventRow {
   household_id: string;
   dog_id: string;
   category: BehaviorCategoryKey;
-  outcome: ToiletOutcome | null;
+  outcome: EventOutcome | null;
   note: string | null;
   raw_transcript: string | null;
   occurred_at: string;

@@ -63,9 +63,11 @@ create table if not exists behavior_events (
       'reaction', 'social', 'car', 'training', 'wake', 'vet', 'observation', 'other'
     )
   ),
-  -- Nur bei category = 'toilet' relevant: war der Lösen-Versuch erfolgreich,
-  -- am falschen Ort (z.B. Crate), oder erfolglos? Kern des Haustrainings-Trackings.
-  outcome text check (outcome in ('success', 'wrong_place', 'fail')),
+  -- Generisches Ergebnis-Feld, Bedeutung hängt von category ab (siehe
+  -- lib/theme.ts outcomeOptionsFor): bei 'toilet' erfolgreich draußen /
+  -- falscher Ort / erfolglos; bei 'sleep' durchgeschlafen / kurz wach,
+  -- selbst beruhigt / unruhige Nacht. Für andere Kategorien ungenutzt.
+  outcome text check (outcome in ('success', 'partial', 'fail')),
   note text,
   raw_transcript text, -- Originaltext der Spracheingabe, für Nachvollziehbarkeit/Re-Parsing
   occurred_at timestamptz not null default now(),

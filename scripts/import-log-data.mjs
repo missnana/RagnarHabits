@@ -213,7 +213,7 @@ export const historicalEvents = [
   },
   {
     "category": "toilet",
-    "outcome": "wrong_place",
+    "outcome": "partial",
     "note": "Pipi-Unfall in der Crate (Nur 6 Min nach Reingehen; 11 Min nach erfolgreichem Garten-Pipi (19:01))",
     "occurred_at": "2026-09-16T19:12:00"
   },
@@ -255,7 +255,7 @@ export const historicalEvents = [
   },
   {
     "category": "toilet",
-    "outcome": "wrong_place",
+    "outcome": "partial",
     "note": "Pipi auf die Pipi-Matte in der Crate (Matte lag zur Not in der Crate bereit)",
     "occurred_at": "2026-09-17T03:15:00"
   },
@@ -315,7 +315,7 @@ export const historicalEvents = [
   },
   {
     "category": "toilet",
-    "outcome": "wrong_place",
+    "outcome": "partial",
     "note": "Pipi-Unfall in der Crate direkt nach dem Aufwachen. Er saß da und hat gefiept, aber wir waren in der Küche und haben es nicht mitbekommen (Hat vor dem Unfall gefiept, aber Fiepen kommt bei ihm generell öfter vor (auch ohne Bedürfnis) - daher kein eindeutiges Signal, wurde in dem Moment nicht als 'muss raus' erkannt)",
     "occurred_at": "2026-09-17T08:25:00"
   },

@@ -4,8 +4,8 @@ import { BlurView } from 'expo-blur';
 import { CategoryPill, FormInput, PrimaryButton } from './ui';
 import { useTheme } from '../lib/hooks/useColorScheme';
 import { supabase } from '../lib/supabase';
-import { behaviorCategories, radius, spacing, toiletOutcomes, typography } from '../lib/theme';
-import type { BehaviorCategoryKey, BehaviorEventRow, ToiletOutcome } from '../lib/database.types';
+import { behaviorCategories, outcomeOptionsFor, radius, spacing, typography } from '../lib/theme';
+import type { BehaviorCategoryKey, BehaviorEventRow, EventOutcome } from '../lib/database.types';
 
 export function EntryEditModal({
   event,
@@ -18,7 +18,8 @@ export function EntryEditModal({
 }) {
   const theme = useTheme();
   const [category, setCategory] = useState<BehaviorCategoryKey>('other');
-  const [outcome, setOutcome] = useState<ToiletOutcome | null>(null);
+  const [outcome, setOutcome] = useState<EventOutcome | null>(null);
+  const outcomePicker = outcomeOptionsFor(category);
   const [note, setNote] = useState('');
   const [transcript, setTranscript] = useState('');
   const [saving, setSaving] = useState(false);
@@ -38,7 +39,7 @@ export function EntryEditModal({
       .from('behavior_events')
       .update({
         category,
-        outcome: category === 'toilet' ? outcome : null,
+        outcome: outcomePicker ? outcome : null,
         note: note || null,
         raw_transcript: transcript || null,
       })
@@ -113,11 +114,11 @@ export function EntryEditModal({
               </View>
             </View>
 
-            {category === 'toilet' && (
+            {outcomePicker && (
               <View style={{ gap: spacing.sm }}>
-                <Text style={[typography.caption, { color: theme.textMuted }]}>Erfolgreich?</Text>
+                <Text style={[typography.caption, { color: theme.textMuted }]}>{outcomePicker.question}</Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                  {toiletOutcomes.map((o) => (
+                  {outcomePicker.options.map((o) => (
                     <CategoryPill
                       key={o.key}
                       label={o.label}

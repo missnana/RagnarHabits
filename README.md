@@ -76,6 +76,14 @@ synchronisiert, ohne manuellen Export/Import.
   proaktiv ("Zoomies-Risiko in ca. X Min."), solange seit dem letzten
   Aufwachen noch keine Zoomies passiert sind — Gelegenheit, vorher gezielt
   zur Ruhe zu kommen.
+- **Nächte durchgeschlafen**: das Ergebnis-Feld (bisher nur bei "Lösen")
+  gibt es jetzt auch bei "Schlafen" ("Durchgeschlafen" / "Kurz wach, selbst
+  beruhigt" / "Unruhig, musste raus"). Dashboard zeigt die aktuelle Serie
+  ("4× in Folge") und die Erfolgsquote — gut, um Fortschritte wie das
+  nächtliche Durchschlafen über die Wochen sichtbar zu machen. Da der
+  Schlafverlauf erst am nächsten Morgen feststeht, trägt man den
+  Schlafen-Eintrag beim Insbettgehen ein und ergänzt das Ergebnis morgens
+  über "Eintrag bearbeiten".
 
 Alle Vorhersagen schauen nur auf die **letzten 30 Tage**, nicht die
 komplette Historie — die Muster eines Welpen ändern sich, je älter er wird,
